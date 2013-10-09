@@ -23,6 +23,10 @@ module EventTracker
     def mixpanel_people_set_once(args)
       (session[:mixpanel_people_set_once] ||= {}).merge!(args)
     end
+    
+    def mixpanel_people_append(args)
+      (session[:mixpanel_people_append] ||= {}).merge!(args)
+    end
 
     def mixpanel_people_increment(event_name)
       (session[:mixpanel_people_increment] ||= []) << event_name
@@ -90,6 +94,10 @@ module EventTracker
 
       if (people = session.delete(:mixpanel_people_set_once)).present?
         a << mixpanel_tracker.people_set_once(people)
+      end
+      
+      if (people = session.delete(:mixpanel_people_append)).present?
+        a << mixpanel_tracker.people_append(people)
       end
 
       if (people = session.delete(:mixpanel_people_increment)).present?
