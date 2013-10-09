@@ -22,6 +22,10 @@ class EventTracker::Mixpanel
   def register(registered_properties)
     %Q{mixpanel.register(#{registered_properties.to_json});}
   end
+  
+  def register_once(registered_properties)
+    %Q{mixpanel.register_once(#{registered_properties.to_json});}
+  end
 
   def track(event_name, properties)
     p = properties.empty? ? "" : ", #{properties.to_json}"
@@ -46,6 +50,10 @@ class EventTracker::Mixpanel
 
   def people_increment(properties)
     %Q{mixpanel.people.increment(#{properties.to_json});}
+  end
+  
+  def people_append(properties)
+    %Q{mixpanel.people.append(#{properties.to_json});}
   end
 
   def set_config(properties)
