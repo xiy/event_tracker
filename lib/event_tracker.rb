@@ -23,7 +23,7 @@ module EventTracker
     def mixpanel_people_set_once(args)
       (session[:mixpanel_people_set_once] ||= {}).merge!(args)
     end
-    
+
     def mixpanel_people_append(args)
       (session[:mixpanel_people_append] ||= {}).merge!(args)
     end
@@ -34,6 +34,14 @@ module EventTracker
 
     def mixpanel_alias(identity)
       session[:mixpanel_alias] = identity
+    end
+
+    def mixpanel_identify(identity)
+      session[:mixpanel_identify] = identity
+    end
+
+    def mixpanel_track_charge(amount)
+      session[:mixpanel_track_charge] = amount
     end
   end
 
@@ -74,34 +82,17 @@ module EventTracker
       return unless body_insert_at
 
       a = []
+
+      if mixpanel_identify = session.delete(:mixpanel_identify)
+        a << mixpanel_tracker.identify(mixpanel_identify)
+      end
+
       if mixpanel_alias = session.delete(:mixpanel_alias)
         a << mixpanel_tracker.alias(mixpanel_alias)
-      elsif distinct_id = respond_to?(:mixpanel_distinct_id, true) && mixpanel_distinct_id
-        a << mixpanel_tracker.identify(distinct_id)
       end
 
       if name_tag = respond_to?(:mixpanel_name_tag, true) && mixpanel_name_tag
         a << mixpanel_tracker.name_tag(name_tag)
-      end
-
-      if (config = session.delete(:mixpanel_set_config)).present?
-        a << mixpanel_tracker.set_config(config)
-      end
-
-      if (people = session.delete(:mixpanel_people_set)).present?
-        a << mixpanel_tracker.people_set(people)
-      end
-
-      if (people = session.delete(:mixpanel_people_set_once)).present?
-        a << mixpanel_tracker.people_set_once(people)
-      end
-      
-      if (people = session.delete(:mixpanel_people_append)).present?
-        a << mixpanel_tracker.people_append(people)
-      end
-
-      if (people = session.delete(:mixpanel_people_increment)).present?
-        a << mixpanel_tracker.people_increment(people)
       end
 
       if identity = respond_to?(:kissmetrics_identity, true) && kissmetrics_identity
@@ -119,6 +110,26 @@ module EventTracker
             a << tracker.track(event_name, properties)
           end
         end
+      end
+
+      if (config = session.delete(:mixpanel_set_config)).present?
+        a << mixpanel_tracker.set_config(config)
+      end
+
+      if (people = session.delete(:mixpanel_people_set)).present?
+        a << mixpanel_tracker.people_set(people)
+      end
+
+      if (people = session.delete(:mixpanel_people_set_once)).present?
+        a << mixpanel_tracker.people_set_once(people)
+      end
+
+      if (people = session.delete(:mixpanel_people_increment)).present?
+        a << mixpanel_tracker.people_increment(people)
+      end
+
+      if (charge = session.delete(:mixpanel_track_charge)).present?
+        a << mixpanel.people_track_charge(charge)
       end
 
       body.insert body_insert_at, view_context.javascript_tag(a.join("\n"))
