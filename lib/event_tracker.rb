@@ -129,7 +129,7 @@ module EventTracker
       end
 
       if (charge = session.delete(:mixpanel_track_charge)).present?
-        a << mixpanel.people_track_charge(charge)
+        a << mixpanel_tracker.people_track_charge(charge)
       end
 
       body.insert body_insert_at, view_context.javascript_tag(a.join("\n"))
